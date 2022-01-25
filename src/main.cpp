@@ -4,17 +4,8 @@
 
 IRsend irsend;
 
-int tmpset = 18, humset = 60, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, heat = 55;
-bool ven = HIGH, win = LOW, pven = HIGH, pheat = HIGH, pwin = LOW;
-
-void setup() {
-  Serial.begin(9600);
-  Wire.begin(0x8);               
-  Wire.onReceive(receiveEvent);
-  Wire.onRequest(dataRqst);
-  pinMode(rad, INPUT);pinMode(sch, INPUT);pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT);
-  digitalWrite(R1, LOW); digitalWrite(R2, LOW); digitalWrite(R3, LOW);
-}
+int tmpset = 18, humset = 60, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, pheat = 100;
+bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void receiveEvent(int howMany) {
   while (Wire.available()) {
@@ -26,16 +17,19 @@ void receiveEvent(int howMany) {
     bov = Wire.read();
   }
 }
+
 void dataRqst(){  
   Wire.write(bui);
-  Wire.write(heat);
+  Wire.write(pheat);
 }
+
 void f(){
   Serial.write(0xff);      Serial.write(0xff);      Serial.write(0xff);
 }
+
 void page1(){
   bui = (((analogRead(A0)*(5000/1024))-500)/100)+10; 
-  //lght = analogRead(A3)/ 10;
+  lght = analogRead(A3)/ 10;
 
   Serial.print("t0.txt=");
   Serial.print("\""); Serial.print(hour); Serial.print("\""); f();
@@ -62,18 +56,24 @@ void page3(){
   Serial.print("\""); Serial.print(humset); Serial.print("\""); f();
   Serial.print("t2.txt=");
   Serial.print("\""); Serial.print(lghtset); Serial.print("\""); f();
-  if (ven == HIGH)
-  Serial.print("b0.pic=15");  f();
-  if (ven == LOW)
-  Serial.print("b0.pic=16");  f();
-  if (heat == HIGH)
-  Serial.print("b2.pic=17");  f();
-  if (heat == LOW)
-  Serial.print("b2.pic=18");  f();
-  if (win == HIGH)
-  Serial.print("b3.pic=20");  f();
-  if (win == LOW)
-  Serial.print("b3.pic=19");  f();
+  if (ven == HIGH){
+    Serial.print("b0.pic=15");  f();
+  }
+  if (ven == LOW){
+    Serial.print("b0.pic=16");  f();
+  }
+  if (heat == HIGH){
+    Serial.print("b2.pic=17");  f();
+  }
+  if (heat == LOW){
+    Serial.print("b2.pic=18");  f();
+  }
+  if (win == HIGH){
+    Serial.print("b3.pic=20");  f();
+  }
+  if (win == LOW){
+    Serial.print("b3.pic=19");  f();
+  }
 }
 
 void light(){
@@ -83,6 +83,15 @@ void light(){
   if (sch == LOW){
     irsend.sendNEC(0xF740BF, 32);
   } 
+}
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin(0x8);               
+  Wire.onReceive(receiveEvent);
+  Wire.onRequest(dataRqst);
+  pinMode(rad, INPUT);pinMode(sch, INPUT);pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT);
+  digitalWrite(R1, LOW); digitalWrite(R2, LOW); digitalWrite(R3, LOW);
 }
 
 void loop() {
@@ -120,10 +129,24 @@ void loop() {
         irsend.sendNEC(0xF7E01F, 32); // jellow-
         break;
       case 18:
+      if (Flash == LOW){
         irsend.sendNEC(0xF7D02F, 32); // flash
+        Flash = HIGH;
+      }
+      else if (Flash == HIGH){
+        irsend.sendNEC(0xF7708F, 32); // flash
+        Flash = LOW;
+      }
         break;
       case 19:
+      if (Fade == LOW){
         irsend.sendNEC(0xF7F00F, 32); // fade
+        Fade = HIGH;
+      }
+      else if (Fade == HIGH){
+        irsend.sendNEC(0xF7708F, 32); // fade
+        Fade = LOW;
+      }
         break;
       case 20:
         irsend.sendNEC(0xF7C837, 32); // quick
@@ -141,10 +164,10 @@ void loop() {
         break;
       case 31:
       if (heat == LOW) {
-        pheat = HIGH;
+        pheat = 0;
       }
       else {
-        pheat = LOW;
+        pheat = 100;
       }
         break;  
       case 32:
@@ -179,8 +202,8 @@ void loop() {
     }
   }
   light();
-  if (pheat == HIGH){
-    heat = 0;
+  if (pheat == 100){
+    heat = LOW;
   }
   /*else if (tmp < (tmpset-1) && pheat == LOW){
     heat = HIGH;
@@ -189,7 +212,7 @@ void loop() {
     heat = LOW;
   }*/
   else {
-    heat = 100;
+    heat = HIGH;
   }
   digitalWrite(R1, heat);
   
