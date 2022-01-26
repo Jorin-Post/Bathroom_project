@@ -4,7 +4,7 @@
 
 IRsend irsend;
 
-int tmpset = 18, humset = 60, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, pheat = 100;
+int tmpset = 18, humset = 60, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, pheat = 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void receiveEvent(int howMany) {
@@ -91,7 +91,7 @@ void setup() {
   Wire.onReceive(receiveEvent);
   Wire.onRequest(dataRqst);
   pinMode(rad, INPUT);pinMode(sch, INPUT);pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT);
-  digitalWrite(R1, LOW); digitalWrite(R2, LOW); digitalWrite(R3, LOW);
+  digitalWrite(R1, HIGH); digitalWrite(R2, HIGH); digitalWrite(R3, LOW);
 }
 
 void loop() {
