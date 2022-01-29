@@ -28,7 +28,9 @@ void f(){
 }
 
 void page1(){
-  bui = (((analogRead(A0)*(5000/1024))-500)/100)+10; 
+   
+  //if (((analogRead(A0)*(4600/1024)-500)/100) < 40)
+   bui =((analogRead(A1)*(4600/1024)-500)/100);
   lght = analogRead(A3)/ 10;
 
   Serial.print("t0.txt=");
