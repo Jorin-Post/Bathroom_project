@@ -4,7 +4,7 @@
 
 IRsend irsend;
 
-int tmpset = 18, humset = 60, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, pheat = 0;
+int tmpset = 18, humset = 70, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, pheat = 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void receiveEvent(int howMany) {
@@ -221,12 +221,12 @@ void loop() {
   if (pven == HIGH){
     ven = HIGH;
   }
-  /*else if (hum > (humset+10) && pven == LOW){
+  else if (hum > (humset) && pven == LOW){
     ven = HIGH;
   }
   else if (hum < (humset-10) && pven == LOW) {
     ven = LOW;
-  }*/
+  }
   else {
     ven = LOW;
   }
