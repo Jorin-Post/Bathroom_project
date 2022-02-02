@@ -19,14 +19,12 @@ void receiveEvent(int howMany) {
   hum = 0;
   hu[t] = h;
   t++;
-  if (t < 5)
+  if (t >= 4)
     t = 0;
   for (int i =0; i < 5; i++){
     hum += hu[i];
   }
   hum = (int) hum / 5;
-  Serial.println();
-  Serial.println(hum);
 }
 
 void dataRqst(){  
