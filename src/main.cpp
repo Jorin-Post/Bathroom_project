@@ -4,18 +4,29 @@
 
 IRsend irsend;
 
-int tmpset = 18, humset = 70, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, pheat = 0;
-bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pwin = LOW, Flash = LOW, Fade = LOW;
+int tmpset = 18, humset = 80, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, hu[] = {60,60,60,60,60}, h =0, pheat = 0, t= 0;
+bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void receiveEvent(int howMany) {
   while (Wire.available()) {
     hour = Wire.read();
     min = Wire.read();
     tmp = Wire.read();
-    hum = Wire.read();
+    h = Wire.read();
     bin = Wire.read();
     bov = Wire.read();
   }
+  hum = 0;
+  hu[t] = h;
+  t++;
+  if (t < 5)
+    t = 0;
+  for (int i =0; i < 5; i++){
+    hum += hu[i];
+  }
+  hum = (int) hum / 5;
+  Serial.println();
+  Serial.println(hum);
 }
 
 void dataRqst(){  
@@ -30,7 +41,7 @@ void f(){
 void page1(){
    
   //if (((analogRead(A0)*(4600/1024)-500)/100) < 40)
-   bui =((analogRead(A1)*(4600/1024)-500)/100);
+  bui =((analogRead(A1)*(4600/1024)-500)/100);
   lght = analogRead(A3)/ 10;
 
   Serial.print("t0.txt=");
@@ -157,6 +168,9 @@ void loop() {
         irsend.sendNEC(0xF7E817, 32); // slow
         break;
       case 30:
+      pven1 = HIGH;
+      if (pven1 == HIGH)
+        pven1 = LOW;
       if (ven == LOW) {
         pven = HIGH;
       }
@@ -218,17 +232,17 @@ void loop() {
   }
   digitalWrite(R1, heat);
   
-  if (pven == HIGH){
-    ven = HIGH;
-  }
-  else if (hum > (humset) && pven == LOW){
-    ven = HIGH;
-  }
-  else if (hum < (humset-10) && pven == LOW) {
+  if (pven == LOW){
     ven = LOW;
+  }
+  else if (hum > humset && pven1 == LOW){
+    ven = LOW;
+  }
+  else if (hum < (humset-10) && pven1 == LOW) {
+    ven = HIGH;
   }
   else {
-    ven = LOW;
+    ven = HIGH;
   }
   digitalWrite(R2, ven);
 }
