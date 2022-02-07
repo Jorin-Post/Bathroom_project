@@ -243,4 +243,5 @@ void loop() {
     ven = HIGH;
   }
   digitalWrite(R2, ven);
+  delay(1000);
 }
