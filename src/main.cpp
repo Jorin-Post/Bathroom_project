@@ -1,20 +1,24 @@
 #include <Arduino.h>
 #include <Wire.h> //Slave
 #include <IRremote.h>
+#include <OneWire.h> 
+#include <DallasTemperature.h>
+
+#define ONE_WIRE_BUS 9 
 
 IRsend irsend;
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
 
-int tmpset = 18, humset = 80, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, bui = 55, bin = 55, bov, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, hu[] = {60,60,60,60,60}, h =0, pheat = 0, t= 0;
+int tmpset = 18, humset = 80, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, tmp = 55, hum = 55, hu[] = {60,60,60,60,60}, h =0, pheat = 0, t= 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
-
+float bui = 0;
 void receiveEvent(int howMany) {
   while (Wire.available()) {
     hour = Wire.read();
     min = Wire.read();
     tmp = Wire.read();
     h = Wire.read();
-    bin = Wire.read();
-    bov = Wire.read();
   }
   hum = 0;
   hu[t] = h;
@@ -28,7 +32,8 @@ void receiveEvent(int howMany) {
 }
 
 void dataRqst(){  
-  Wire.write(bui);
+  int buiten = bui * 100;
+  Wire.write(buiten);
   Wire.write(pheat);
 }
 
@@ -37,9 +42,9 @@ void f(){
 }
 
 void page1(){
-   
-  //if (((analogRead(A0)*(4600/1024)-500)/100) < 40)
-  bui =((analogRead(A1)*(4600/1024)-500)/100);
+  
+  sensors.requestTemperatures();
+  bui =sensors.getTempCByIndex(0);
   lght = analogRead(A3)/ 10;
 
   Serial.print("t0.txt=");
@@ -50,14 +55,8 @@ void page1(){
   Serial.print("\""); Serial.print(tmp); Serial.print("\""); f();
   Serial.print("t3.txt=");
   Serial.print("\""); Serial.print(bui); Serial.print("\""); f();
-  Serial.print("t4.txt=");
-  Serial.print("\""); Serial.print(bin); Serial.print("\""); f();
-  Serial.print("t5.txt=");
-  Serial.print("\""); Serial.print(bov); Serial.print("\""); f();
   Serial.print("t6.txt=");
   Serial.print("\""); Serial.print(hum); Serial.print("\""); f();
-  Serial.print("t7.txt=");
-  Serial.print("\""); Serial.print(lght); Serial.print("\""); f();
 }
 
 void page3(){
@@ -98,7 +97,8 @@ void light(){
 
 void setup() {
   Serial.begin(9600);
-  Wire.begin(0x8);               
+  sensors.begin();
+  Wire.begin(0x8);              
   Wire.onReceive(receiveEvent);
   Wire.onRequest(dataRqst);
   pinMode(rad, INPUT);pinMode(sch, INPUT);pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT);
