@@ -10,30 +10,20 @@ IRsend irsend;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-int tmpset = 18, humset = 80, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, hu[] = {60,60,60,60,60}, h =0, pheat = 0, t= 0;
+int tmpset = 18, humset = 80, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, hu[] = {60,60,60,60,60}, h =0, pheat = 0, t= 0, bui = 0, tmp = 0;;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
-float bui = 0, tmp = 0;
+
 void receiveEvent(int howMany) {
   while (Wire.available()) {
     hour = Wire.read();
     min = Wire.read();
-    tmp = Wire.read() / 100;
-    h = Wire.read();
+    tmp = Wire.read();
+    hum = Wire.read();
   }
-  hum = 0;
-  hu[t] = h;
-  t++;
-  if (t >= 4)
-    t = 0;
-  for (int i =0; i < 5; i++){
-    hum += hu[i];
-  }
-  hum = (int) hum / 5;
 }
 
-void dataRqst(){  
-  int buiten = bui * 100;
-  Wire.write(buiten);
+void dataRqst(){ 
+  Wire.write(bui);
   Wire.write(pheat);
 }
 
@@ -44,7 +34,7 @@ void f(){
 void page1(){
   
   sensors.requestTemperatures();
-  bui =sensors.getTempCByIndex(0);
+  bui = sensors.getTempCByIndex(0);
   lght = analogRead(A3)/ 10;
 
   Serial.print("t0.txt=");
