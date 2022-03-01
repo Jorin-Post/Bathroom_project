@@ -195,10 +195,10 @@ void loop() {
       case 36:
         humset -= 5;
         break;
-        case 37:
+      case 37:
         lghtset += 50;
         break;
-        case 38:
+      case 38:
         lghtset -= 50;
         break;
      default:
