@@ -10,16 +10,21 @@ IRsend irsend;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-int tmpset = 18, humset = 80, lghtset = 50, rad = 4, sch = 7, R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, hu[] = {60,60,60,60,60}, h =0, pheat = 0, t= 0, bui = 0, tmp = 0;;
+int tmpset = 18, humset = 80, lghtset = 50,   R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, pheat = 0, bui = 0, tmp = 0, time = 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void receiveEvent(int howMany) {
+  int t = 0, h = 0;
   while (Wire.available()) {
     hour = Wire.read();
     min = Wire.read();
-    tmp = Wire.read();
-    hum = Wire.read();
+    t = Wire.read();
+    h = Wire.read();
   }
+  if (t > 0 && t < 50)
+    tmp = t;
+  if (h > 0 && h < 100)
+    hum = h;
 }
 
 void dataRqst(){ 
@@ -47,6 +52,15 @@ void page1(){
   Serial.print("\""); Serial.print(bui); Serial.print("\""); f();
   Serial.print("t6.txt=");
   Serial.print("\""); Serial.print(hum); Serial.print("\""); f();
+/*
+  if (time < 10){
+    time ++;
+    Serial.print("dim=100"); f();
+  }
+  else {
+    time = 0;
+    Serial.print("dim=0"); f();
+  }*/
 }
 
 void page3(){
@@ -76,22 +90,13 @@ void page3(){
   }
 }
 
-void light(){
-  if (lght < lghtset && rad == HIGH){
-    irsend.sendNEC(0xF7C03F, 32);
-  }
-  if (sch == LOW){
-    irsend.sendNEC(0xF740BF, 32);
-  } 
-}
-
 void setup() {
   Serial.begin(9600);
   sensors.begin();
   Wire.begin(0x8);              
   Wire.onReceive(receiveEvent);
   Wire.onRequest(dataRqst);
-  pinMode(rad, INPUT);pinMode(sch, INPUT);pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT);
+  pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT);
   digitalWrite(R1, HIGH); digitalWrite(R2, HIGH); digitalWrite(R3, LOW);
 }
 
@@ -205,16 +210,9 @@ void loop() {
      break;    
     }
   }
-  light();
   if (pheat == 100){
     heat = LOW;
   }
-  /*else if (tmp < (tmpset-1) && pheat == LOW){
-    heat = HIGH;
-  }
-  else if (tmp > (tmpset+1) && pheat == LOW) {
-    heat = LOW;
-  }*/
   else {
     heat = HIGH;
   }
