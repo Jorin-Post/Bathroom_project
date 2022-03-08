@@ -10,7 +10,7 @@ IRsend irsend;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-int tmpset = 18, humset = 80, lghtset = 50,   R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 80, pheat = 0, bui = 0, tmp = 0, time = 0;
+int tmpset = 16, humset = 80, lghtset = 50,   R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 80, pheat = 0, bui = 0, tmp = 0, time = 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void receiveEvent(int howMany) {
@@ -21,9 +21,9 @@ void receiveEvent(int howMany) {
     t = Wire.read();
     h = Wire.read();
   }
-  if (t > 0 && t < 50)
+  if (t > 0 && t < 50)// && t > (tmp - 2) && t < (tmp + 2))
     tmp = t;
-  if (h > 0 && h < 100 && (h - hum) < 15)
+  if (h > 0 && h < 100 && (h - hum) < 15 && h != t)
     hum = h;
 }
 
@@ -210,10 +210,10 @@ void loop() {
      break;    
     }
   }
-  if (pheat == 100){
+  if (pheat == 100 || tmp < tmpset){
     heat = LOW;
   }
-  else {
+  else if (pheat == 0 || tmp > tmpset){
     heat = HIGH;
   }
   digitalWrite(R1, heat);
