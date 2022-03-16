@@ -10,7 +10,7 @@ IRsend irsend;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-int tmpset = 16, humset = 80, lghtset = 50,   R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, pheat = 0, bui = 0, tmp = 55, time = 0;
+int tmpset = 15, humset = 80, lghtset = 50, rad = 2, sw = 6,  R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, pheat = 0, bui = 0, tmp = 55, time = 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void receiveEvent(int howMany) {
@@ -21,9 +21,9 @@ void receiveEvent(int howMany) {
     t = Wire.read();
     h = Wire.read();
   }
-  if (t > 0 && t < 50 && t != h)
+  if (t > 0 && t < 50 && t != h && t != hour && t != min)
     tmp = t;
-  if (h > 0 && h < 100 && h != t)
+  if (h > 0 && h < 100 && h != t && h != hour && h != min)
     hum = h;
 }
 
@@ -52,15 +52,6 @@ void page1(){
   Serial.print("\""); Serial.print(bui); Serial.print("\""); f();
   Serial.print("t6.txt=");
   Serial.print("\""); Serial.print(hum); Serial.print("\""); f();
-/*
-  if (time < 10){
-    time ++;
-    Serial.print("dim=100"); f();
-  }
-  else {
-    time = 0;
-    Serial.print("dim=0"); f();
-  }*/
 }
 
 void page3(){
@@ -90,13 +81,31 @@ void page3(){
   }
 }
 
+void light(){
+  if (digitalRead(rad) == HIGH && digitalRead(sw) == LOW){
+      irsend.sendNEC(0xF7C03F, 32);
+      Serial.print("dim=100"); f();
+  }
+  else if (digitalRead(rad) == HIGH){
+      irsend.sendNEC(0xF7C03F, 32);
+      Serial.print("dim=100"); f();
+      time = 0;
+  }
+  else if (time > 180){
+      irsend.sendNEC(0xF740BF, 32);
+      Serial.print("dim=0"); f();
+  }
+  else
+      time++;
+}
+
 void setup() {
   Serial.begin(9600);
   sensors.begin();
   Wire.begin(0x8);              
   Wire.onReceive(receiveEvent);
   Wire.onRequest(dataRqst);
-  pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT);
+  pinMode(sw, INPUT); pinMode(rad, INPUT);pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT); 
   digitalWrite(R1, HIGH); digitalWrite(R2, HIGH); digitalWrite(R3, LOW);
 }
 
@@ -213,7 +222,7 @@ void loop() {
   if (pheat == 100 || tmp < tmpset){
     heat = LOW;
   }
-  else if (pheat == 0 || tmp > tmpset){
+  else if (pheat == 0 || tmp > tmpset+1){
     heat = HIGH;
   }
   digitalWrite(R1, heat);
@@ -231,5 +240,6 @@ void loop() {
     ven = HIGH;
   }
   digitalWrite(R2, ven);
+  light();
   delay(1000);
 }
