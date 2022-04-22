@@ -10,7 +10,7 @@ IRsend irsend;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-int tmpset = 15, humset = 80, lghtset = 50, rad = 2, sw = 6,  R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, pheat = 0, bui = 0, tmp = 55, time = 0;
+int tmpset = 14, humset = 80, lghtset = 70, rad = 2, sw = 6,  R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, pheat = 0, bui = 0, tmp = 55, time = 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void receiveEvent(int howMany) {
@@ -82,18 +82,19 @@ void page3(){
 }
 
 void light(){
-  if (digitalRead(rad) == HIGH && digitalRead(sw) == LOW){
+  if (digitalRead(rad) == HIGH && digitalRead(sw) == LOW && lght < lghtset){
+      irsend.sendNEC(0xF7C03F, 32);  
+  }
+  else if (digitalRead(rad) == HIGH && lght < lghtset){
       irsend.sendNEC(0xF7C03F, 32);
-      Serial.print("dim=100"); f();
   }
   else if (digitalRead(rad) == HIGH){
-      irsend.sendNEC(0xF7C03F, 32);
-      Serial.print("dim=100"); f();
-      time = 0;
+    Serial.print("dim=100"); f();
   }
   else if (time > 180){
       irsend.sendNEC(0xF740BF, 32);
       Serial.print("dim=0"); f();
+      time = 0;
   }
   else
       time++;
@@ -210,10 +211,10 @@ void loop() {
         humset -= 5;
         break;
       case 37:
-        lghtset += 50;
+        lghtset += 10;
         break;
       case 38:
-        lghtset -= 50;
+        lghtset -= 10;
         break;
      default:
      break;    
