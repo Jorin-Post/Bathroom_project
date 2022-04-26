@@ -87,6 +87,7 @@ void light(){
   }
   else if (digitalRead(rad) == HIGH && lght < lghtset){
       irsend.sendNEC(0xF7C03F, 32);
+      Serial.print("dim=100"); f();
   }
   else if (digitalRead(rad) == HIGH){
     Serial.print("dim=100"); f();
