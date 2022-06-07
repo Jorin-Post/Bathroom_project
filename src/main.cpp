@@ -1,43 +1,33 @@
 #include <Arduino.h>
-#include <Wire.h> //Slave
+#include <Wire.h> //master
 #include <IRremote.h>
 #include <OneWire.h> 
 #include <DallasTemperature.h>
+#include <TinyGPS++.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BusIO_Register.h>
+#include "Adafruit_AM2320.h"
+#include <SoftwareSerial.h>
 
 #define ONE_WIRE_BUS 9 
 
 IRsend irsend;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
+TinyGPSPlus gps;
+Adafruit_AM2320 am2320 = Adafruit_AM2320();
+SoftwareSerial Serial2(4, 5); // RX, TX
 
 int tmpset = 14, humset = 80, lghtset = 70, rad = 2, sw = 6,  R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, pheat = 0, bui = 0, tmp = 55, time = 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
-
-void receiveEvent(int howMany) {
-  int t = 0, h = 0;
-  while (Wire.available()) {
-    hour = Wire.read();
-    min = Wire.read();
-    t = Wire.read();
-    h = Wire.read();
-  }
-  if (t > 0 && t < 50 && t != h && t != hour && t != min)
-    tmp = t;
-  if (h > 0 && h < 100 && h != t && h != hour && h != min)
-    hum = h;
-}
-
-void dataRqst(){ 
-  Wire.write(bui);
-  Wire.write(pheat);
-}
 
 void f(){
   Serial.write(0xff);      Serial.write(0xff);      Serial.write(0xff);
 }
 
 void page1(){
-  
+  tmp = am2320.readTemperature();
+  hum = am2320.readHumidity();
   sensors.requestTemperatures();
   bui = sensors.getTempCByIndex(0);
   lght = analogRead(A3)/ 10;
@@ -103,20 +93,28 @@ void light(){
 
 void setup() {
   Serial.begin(9600);
+  Serial2.begin(9600);
   sensors.begin();
-  Wire.begin(0x8);              
-  Wire.onReceive(receiveEvent);
-  Wire.onRequest(dataRqst);
+  Wire.begin();
+  am2320.begin();              
   pinMode(sw, INPUT); pinMode(rad, INPUT);pinMode(R1, OUTPUT);pinMode(R2, OUTPUT);pinMode(R3, OUTPUT); 
   digitalWrite(R1, HIGH); digitalWrite(R2, HIGH); digitalWrite(R3, LOW);
 }
 
 void loop() {
-  while (Serial.available() > 0){
+  while(Serial2.available() > 0){
+    gps.encode(Serial2.read());
+    if (gps.location.isUpdated()) {
+      hour   = gps.time.hour()+2;
+      min    = gps.time.minute();
+    }
+  }
+  
+  while (Serial.available() > 0 ){
     int txt = Serial.read();
     switch (txt){
       case 1:
-      page1();
+        page1();
       break;
       case 3:
       page3();
@@ -243,5 +241,5 @@ void loop() {
   }
   digitalWrite(R2, ven);
   light();
-  delay(1000);
+  delay(500);
 }
