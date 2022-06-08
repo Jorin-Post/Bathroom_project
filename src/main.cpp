@@ -216,30 +216,30 @@ void loop() {
         lghtset -= 10;
         break;
      default:
-     break;    
+      if (pheat == 100 || tmp < tmpset){
+          heat = LOW;
+      }
+      else if (pheat == 0 || tmp > tmpset+1){
+          heat = HIGH;
+      }
+      digitalWrite(R1, heat);
+        
+      if (pven == LOW){
+          ven = LOW;
+      }
+      else if (hum > humset && pven1 == LOW){
+          ven = LOW;
+      }
+      else if (hum < (humset-10) && pven1 == LOW) {
+          ven = HIGH;
+      }
+      else {
+          ven = HIGH;
+      }
+      digitalWrite(R2, ven);
+      light();
+      delay(500);
+      return;    
     }
-  }
-  if (pheat == 100 || tmp < tmpset){
-    heat = LOW;
-  }
-  else if (pheat == 0 || tmp > tmpset+1){
-    heat = HIGH;
-  }
-  digitalWrite(R1, heat);
-  
-  if (pven == LOW){
-    ven = LOW;
-  }
-  else if (hum > humset && pven1 == LOW){
-    ven = LOW;
-  }
-  else if (hum < (humset-10) && pven1 == LOW) {
-    ven = HIGH;
-  }
-  else {
-    ven = HIGH;
-  }
-  digitalWrite(R2, ven);
-  light();
-  delay(500);
+  } 
 }
