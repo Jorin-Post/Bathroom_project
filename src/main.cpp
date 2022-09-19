@@ -3,22 +3,19 @@
 #include <IRremote.h>
 #include <OneWire.h> 
 #include <DallasTemperature.h>
-#include <TinyGPS++.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BusIO_Register.h>
 #include "Adafruit_AM2320.h"
-#include <SoftwareSerial.h>
+
 
 #define ONE_WIRE_BUS 9 
 
 IRsend irsend;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-TinyGPSPlus gps;
 Adafruit_AM2320 am2320 = Adafruit_AM2320();
-SoftwareSerial Serial2(4, 5); // RX, TX
 
-int tmpset = 14, humset = 80, lghtset = 70, rad = 2, sw = 6,  R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 55, min = 55, hum = 55, pheat = 0, bui = 0, tmp = 55, time = 0;
+int tmpset = 14, humset = 80, lghtset = 700, rad = 2, sw = 6,  R1 = 11, R2 = 10, R3 = 12, lght = 55, hour = 0, min = 0, hum = 55, pheat = 0, bui = 0, tmp = 55, time = 0;
 bool ven = HIGH, heat = HIGH, win = LOW, pven = HIGH, pven1 = LOW, pwin = LOW, Flash = LOW, Fade = LOW;
 
 void f(){
@@ -30,12 +27,30 @@ void page1(){
   hum = am2320.readHumidity();
   sensors.requestTemperatures();
   bui = sensors.getTempCByIndex(0);
-  lght = analogRead(A3)/ 10;
+  //lght = analogRead(A3)/ 10;
 
-  Serial.print("t0.txt=");
-  Serial.print("\""); Serial.print(hour); Serial.print("\""); f();
-  Serial.print("t1.txt=");
-  Serial.print("\""); Serial.print(min); Serial.print("\""); f();
+  if (ven == LOW){
+    Serial.print("t0.txt=");
+    Serial.print("\""); Serial.print("1"); Serial.print("\""); 
+    f();
+  }
+  else{
+    Serial.print("t0.txt=");
+    Serial.print("\""); Serial.print("0"); Serial.print("\""); 
+    f();
+  }
+
+  if (heat == LOW){
+    Serial.print("t1.txt=");
+    Serial.print("\""); Serial.print("1"); Serial.print("\""); 
+    f();
+  }
+  else{
+    Serial.print("t1.txt=");
+    Serial.print("\""); Serial.print("0"); Serial.print("\""); 
+    f();
+  }
+
   Serial.print("t2.txt=");
   Serial.print("\""); Serial.print(tmp); Serial.print("\""); f();
   Serial.print("t3.txt=");
@@ -72,15 +87,21 @@ void page3(){
 }
 
 void light(){
-  if (digitalRead(rad) == HIGH && digitalRead(sw) == LOW && lght < lghtset){
-      irsend.sendNEC(0xF7C03F, 32);  
-  }
-  else if (digitalRead(rad) == HIGH && lght < lghtset){
+  lght = analogRead(A3);
+  Serial.println(lght);
+  if (digitalRead(sw) == LOW && lght <= lghtset){
       irsend.sendNEC(0xF7C03F, 32);
       Serial.print("dim=100"); f();
+      time = 0;  
+  }
+  else if (digitalRead(rad) == HIGH && lght <= lghtset){
+      irsend.sendNEC(0xF7C03F, 32);
+      Serial.print("dim=90"); f();
+      time = 0;
   }
   else if (digitalRead(rad) == HIGH){
-    Serial.print("dim=100"); f();
+    Serial.print("dim=80"); f();
+    time = 0;
   }
   else if (time > 180){
       irsend.sendNEC(0xF740BF, 32);
@@ -93,7 +114,6 @@ void light(){
 
 void setup() {
   Serial.begin(9600);
-  Serial2.begin(9600);
   sensors.begin();
   Wire.begin();
   am2320.begin();              
@@ -102,14 +122,6 @@ void setup() {
 }
 
 void loop() {
-  while(Serial2.available() > 0){
-    gps.encode(Serial2.read());
-    if (gps.location.isUpdated()) {
-      hour   = gps.time.hour()+2;
-      min    = gps.time.minute();
-    }
-  }
-  
   while (Serial.available() > 0 ){
     int txt = Serial.read();
     switch (txt){
@@ -117,7 +129,7 @@ void loop() {
         page1();
       break;
       case 3:
-      page3();
+        page3();
       break;
       case 10:
         irsend.sendNEC(0xF7C03F, 32); // on
@@ -210,10 +222,10 @@ void loop() {
         humset -= 5;
         break;
       case 37:
-        lghtset += 10;
+        lghtset += 50;
         break;
       case 38:
-        lghtset -= 10;
+        lghtset -= 50;
         break;
      default:
       if (pheat == 100 || tmp < tmpset){
@@ -236,10 +248,9 @@ void loop() {
       else {
           ven = HIGH;
       }
-      digitalWrite(R2, ven);
-      light();
-      delay(500);
-      return;    
+      digitalWrite(R2, ven);   
     }
   } 
+  light();
+  delay(1000);
 }
